@@ -20,7 +20,7 @@ FetchContent_Declare(
 FetchContent_Declare(
 	asmjit
 	GIT_REPOSITORY 	https://www.github.com/asmjit/asmjit
-	GIT_TAG		052b4430e93f021709d27d2b5d42694ce0c49ce6
+	GIT_TAG		330aa64386f394e090eb1062c645f9d021a761bc
 )
 FetchContent_MakeAvailable(fmtlib asmjit)
 
