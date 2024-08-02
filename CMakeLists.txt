@@ -32,5 +32,11 @@ target_sources(bfjit PRIVATE
     "src/parser.cpp"
     "src/interpreter.cpp"
     "src/optimizer.cpp"
-    "src/jit.cpp"
 )
+
+message( STATUS "Architecture: ${CMAKE_SYSTEM_PROCESSOR}" )
+if( CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" )
+    target_sources(bfjit PRIVATE "src/jit.arm64.cpp")
+elseif( CMAKE_SYSTEM_PROCESSOR MATCHES "x86" )
+    target_sources(bfjit PRIVATE "src/jit.x64.cpp")
+endif()
