@@ -2,6 +2,7 @@
 #include "interpreter.hpp"
 #include "parser.hpp"
 #include <cstdlib>
+#include <cstdint>
 #include <fmt/format.h>
 #include <span>
 
