@@ -161,7 +161,7 @@ void do_codegen(asmjit::x86::Assembler& a, std::span<bfjit::BFOp const> code, as
 			// align stack
 			a.push(x64::rbp);
 			a.mov(x64::rbp, x64::rsp);
-			a.add(x64::rsp, 15);
+			a.sub(x64::rsp, 15);
 			a.and_(x64::rsp, uint64_t(~0xf));
 
 			a.call(print_char);
