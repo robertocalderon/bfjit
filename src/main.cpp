@@ -13,12 +13,14 @@
 
 std::string load_program(char const* path);
 void print_usage(char const* argv);
+size_t print_bfcode(std::vector<bfjit::BFOp> const& code, size_t start = 0, size_t offset = 0);
 
 int main(int const argc, char const *argv[]) {
     std::string program;
     char const* program_path = nullptr;
     bool run_interpreter = false;
     bool do_not_optimize = false;
+    bool print_and_exit = false;
 
     for (int i = 1; i < argc; i++) {
         auto arg = std::string_view{ argv[i] };
@@ -30,6 +32,8 @@ int main(int const argc, char const *argv[]) {
             } else if (arg == "-h") {
                 print_usage(argv[0]);
                 return 0;
+            } else if (arg == "-p") {
+                print_and_exit = true;
             } else {
                 fmt::print("unknown flag: {}\n", arg);
                 print_usage(argv[0]);
@@ -49,6 +53,11 @@ int main(int const argc, char const *argv[]) {
     auto bytecode = bfjit::parse_program(program);
     if (!do_not_optimize)
         bytecode = bfjit::optimize(bytecode);
+
+    if (print_and_exit) {
+        print_bfcode(bytecode);
+        return 0;
+    }
 
     if (run_interpreter) {
         auto interpreter = bfjit::Interpreter( bytecode );
@@ -79,6 +88,41 @@ std::string load_program(char const* path) {
     return buffer;
 }
 
+size_t print_bfcode(std::vector<bfjit::BFOp> const& code, size_t start, size_t offset) {
+    size_t i = start;
+    for (; i < code.size(); i++) {
+        auto const& bc = code[i];
+        for (int j = 0; j < offset; j++) fmt::print(" ");
+        switch (bc.m_type) {
+        case bfjit::BFOp::Type::Mod:
+            fmt::print("<{}:{}>\n", bc.inc_arg < 0 ? '-' : '+', int8_t(bc.inc_arg));
+            break;
+        case bfjit::BFOp::Type::ModPtr:
+            fmt::print("<{}:{}>\n", bc.inc_ptr_arg < 0 ? '<' : '>', bc.inc_ptr_arg);
+            break;
+        case bfjit::BFOp::Type::In:
+            fmt::print("<In>\n");
+            break;
+        case bfjit::BFOp::Type::Out:
+            fmt::print("<Out>\n");
+            break;
+        case bfjit::BFOp::Type::LoopBeg:
+            fmt::print("<LoopBegin>\n");
+            i = print_bfcode(code, i+1, offset+1);
+            fmt::print("<LoopEnd>\n");
+            break;
+        case bfjit::BFOp::Type::LoopEnd:
+            return i+1;
+        case bfjit::BFOp::Type::SetValue:
+            fmt::print("<Set:{}>\n", bc.set_arg);
+            break;
+        case bfjit::BFOp::Type::Halt:
+            fmt::print("<Halt>\n");
+          break;
+        }
+    }
+    return i;
+}
 
 void print_usage(char const* argv) {
     fmt::print(R"(Usage:
@@ -87,5 +131,6 @@ OPTIONS:
     -d      disable optimizations
     -i      use interpreter instead of JIT
     -h      print this message
+    -p      print bytecode before execution and exit
 )", argv);
 }
