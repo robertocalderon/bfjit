@@ -92,7 +92,8 @@ size_t print_bfcode(std::vector<bfjit::BFOp> const& code, size_t start, size_t o
     size_t i = start;
     for (; i < code.size(); i++) {
         auto const& bc = code[i];
-        for (int j = 0; j < offset; j++) fmt::print(" ");
+        if (bc.m_type != bfjit::BFOp::Type::LoopEnd)
+            for (int j = 0; j < offset; j++) fmt::print(" ");
         switch (bc.m_type) {
         case bfjit::BFOp::Type::Mod:
             fmt::print("<{}:{}>\n", bc.inc_arg < 0 ? '-' : '+', int8_t(bc.inc_arg));
@@ -109,10 +110,11 @@ size_t print_bfcode(std::vector<bfjit::BFOp> const& code, size_t start, size_t o
         case bfjit::BFOp::Type::LoopBeg:
             fmt::print("<LoopBegin>\n");
             i = print_bfcode(code, i+1, offset+1);
+            for (int j = 0; j < offset; j++) fmt::print(" ");
             fmt::print("<LoopEnd>\n");
             break;
         case bfjit::BFOp::Type::LoopEnd:
-            return i+1;
+            return i;
         case bfjit::BFOp::Type::SetValue:
             fmt::print("<Set:{}>\n", bc.set_arg);
             break;
