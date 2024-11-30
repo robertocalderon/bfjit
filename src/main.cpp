@@ -2,6 +2,7 @@
 #include "interpreter.hpp"
 #include "jit.hpp"
 #include "optimizer.hpp"
+#include "options.hpp"
 #include "parser.hpp"
 #include <string>
 #include <iostream>
@@ -21,6 +22,7 @@ int main(int const argc, char const *argv[]) {
     bool run_interpreter = false;
     bool do_not_optimize = false;
     bool print_and_exit = false;
+    bfjit::CLIOpts cli_opts;
 
     for (int i = 1; i < argc; i++) {
         auto arg = std::string_view{ argv[i] };
@@ -34,6 +36,8 @@ int main(int const argc, char const *argv[]) {
                 return 0;
             } else if (arg == "-p") {
                 print_and_exit = true;
+            } else if (arg == "-v") {
+                cli_opts.debug_info = true;
             } else {
                 fmt::print("unknown flag: {}\n", arg);
                 print_usage(argv[0]);
@@ -63,7 +67,7 @@ int main(int const argc, char const *argv[]) {
         auto interpreter = bfjit::Interpreter( bytecode );
         interpreter.run_until_end();
     } else {
-        auto jit = bfjit::JIT( bytecode );
+        auto jit = bfjit::JIT( bytecode, cli_opts );
         jit.do_codegen();
         jit.run_until_end();
     }

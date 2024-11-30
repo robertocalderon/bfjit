@@ -1,6 +1,7 @@
 
 #include "jit.hpp"
 #include "asmjit/core/operand.h"
+#include "options.hpp"
 #include "parser.hpp"
 
 #include <cstdlib>
@@ -40,13 +41,17 @@ void do_codegen(asmjit::x86::Assembler& a, std::span<bfjit::BFOp const> code, as
 
 namespace bfjit {
 
-    JIT::JIT(std::span<BFOp const> bytecode) :
+    struct JIT::InnerData {};
+
+    JIT::JIT(std::span<BFOp const> bytecode, bfjit::CLIOpts const& cli_opts) :
         m_ip(0),
         m_ptr(0),
-        m_bytecode(bytecode)
+        m_bytecode(bytecode),
+	m_cli_opts(cli_opts)
     {
         m_buffer.resize(4096);
     }
+    JIT::~JIT() = default;
 
     void JIT::do_codegen() {
         size_t ip = 0;
@@ -109,7 +114,7 @@ namespace bfjit {
             auto data = uint64_t(this->m_buffer.data());
             auto const offset = mapping_bytecode_to_code[m_ip];
             auto const addr = uint64_t(this->main_function) + offset;
-            this->main_function(data, this->m_ptr, addr);
+            this->main_function(data, this->m_ptr, addr, nullptr);
         }
         else {
             fmt::print("you need to call do_codegen first\n");
